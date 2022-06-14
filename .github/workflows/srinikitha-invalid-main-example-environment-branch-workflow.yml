@@ -1,0 +1,34 @@
+name: Architect main Branch Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  ARCHITECT_GENERATED: true
+  ARCHITECT_BRANCH: true
+  COMPONENT_FILE_PATH: architect.yml
+  ARCHITECT_ACCOUNT: srinikitha
+  COMPONENT_NAME: invalid
+  ENVIRONMENT_NAME: example-environment
+  BRANCH_NAME: main
+
+jobs:
+  architect_create_branch_deployments:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Install Architect CLI
+        run: sudo npm install -g @architect-io/cli
+      - name: Login to Architect Cloud
+        run: architect login -e ${{ secrets.ARCHITECT_EMAIL }} -p ${{ secrets.ARCHITECT_PASSWORD }} # These secrets were created on your behalf
+      - name: Register component w/ Architect
+        run: architect register ${{ env.COMPONENT_FILE_PATH }} -t latest
+      - name: Deploy component
+        run: architect deploy --auto-approve -e ${{ env.ENVIRONMENT_NAME }} ${{ env.COMPONENT_NAME }}:latest
